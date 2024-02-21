@@ -1,27 +1,66 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import AddTask from "../components/AddTask"; // for rendering Task Add Form
 import TaskCard from "../components/TaskCard"; // for rendering Task List
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+import API_URL from "../utils/api";
 
 function ProjectDetailsPage () {
+
+  const params = useParams()
+  console.log(params)
+
+  const [ details, setDetails ] = useState(null)
+  console.log(details)
+
+  useEffect(() => {
+    getData()
+  }, [])
+
+  const getData = async () => {
+
+    try {
+      
+      // const response = await axios.get(`https://project-management-api-4641927fee65.herokuapp.com/projects/${params.projectId}`)
+      const response = await axios.get(`${API_URL}/projects/${params.projectId}?_embed=tasks`)
+      // con ?_embed=tasks` le pedimos adicionalmente todas las tareas relacionadas con este proyecto.
+      console.log(response.data)
+      setDetails(response.data)
+
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+
+  if (details === null) {
+    return <h4>... buscando</h4>
+  }
   
   return (
     <div className="ProjectDetailsPage">
-      {project && (
-        <div>
-          <h1>PROJECT_TITLE_HERE</h1>
-          <p>PROJECT_DESCRIPTION_HERE</p>
-        </div>
-      )}
+
+      <div>
+        <h1>{details.title}</h1>
+        <p>{details.description}</p>
+      </div>
+
       
       {/* ... list of all Tasks for this Project should be rendered here */}
+      {details.tasks.map((eachTask) => {
+        return <TaskCard key={eachTask.id} {...eachTask}/>
+      })}
 
       {/* ... form for adding a new Task should be rendered here    */}
+      <AddTask projectId={details.id} getData={getData}/>
+      {/* opcion1. pasamos el id del projecto como props */}
 
       <Link to="/projects">
         <button>Back to projects</button>
       </Link>
       
-      <Link to={`/projects/edit/PROJECT_ID_HERE`}>
+      <Link to={`/projects/edit/${details.id}`}>
         <button>Edit Project</button>
       </Link>      
       
